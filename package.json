@@ -1,0 +1,13 @@
+{
+    "name": "node-async",
+    "description": "Higher-order functions and common patterns for asynchronous code in Node.js",
+    "main": "./lib/node-async",
+    "authors": [
+        "Caolan McMahon",
+        "Sergey I. Yarkin"
+    ],
+    "version": "0.2.9",
+    "scripts": {
+        "test": "nodeunit test/test-async.js"
+    }
+}
