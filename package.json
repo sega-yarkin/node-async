@@ -6,7 +6,7 @@
         "Caolan McMahon",
         "Sergey I. Yarkin"
     ],
-    "version": "0.2.10",
+    "version": "0.3.0",
     "repository": {
     	"type": "git",
     	"url" : "http://github.com/sega-yarkin/node-async"
