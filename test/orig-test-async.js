@@ -549,6 +549,31 @@ exports['auto calls callback multiple times'] = function(test) {
     }, 10);
 };
 
+// Issue 462 on github: https://github.com/caolan/async/issues/462
+exports['auto modifying results causes final callback to run early'] = function(test) {
+    async.auto({
+        task1: function(callback, results){
+            results.inserted = true
+            callback(null, 'task1');
+        },
+        task2: function(callback){
+            setTimeout(function(){
+                callback(null, 'task2');
+            }, 50);
+        },
+        task3: function(callback){
+            setTimeout(function(){
+                callback(null, 'task3');
+            }, 100);
+        }
+    },
+    function(err, results){
+        test.equal(results.inserted, true)
+        test.ok(results.task3, 'task3')
+        test.done();
+    });
+};
+
 exports['waterfall'] = function(test){
     test.expect(6);
     var call_order = [];
@@ -2186,6 +2211,57 @@ exports['queue idle'] = function(test) {
         test.equal(q.idle(), true);
         test.done();
     }
+}
+
+exports['queue pause'] = function(test) {
+    var call_order = [],
+        task_timeout = 100,
+        pause_timeout = 300,
+        resume_timeout = 500,
+        tasks = [ 1, 2, 3, 4, 5, 6 ],
+
+        elapsed = (function () {
+            var start = +Date.now();
+            return function () { return Math.floor((+Date.now() - start) / 100) * 100; };
+        })();
+
+    var q = async.queue(function (task, callback) {
+        call_order.push('process ' + task);
+        call_order.push('timeout ' + elapsed());
+        callback();
+    });
+
+    function pushTask () {
+        var task = tasks.shift();
+        if (!task) { return; }
+        setTimeout(function () {
+            q.push(task);
+            pushTask();
+        }, task_timeout);
+    }
+    pushTask();
+
+    setTimeout(function () {
+        q.pause();
+        test.equal(q.paused, true);
+    }, pause_timeout);
+
+    setTimeout(function () {
+        q.resume();
+        test.equal(q.paused, false);
+    }, resume_timeout);
+
+    setTimeout(function () {
+        test.same(call_order, [
+            'process 1', 'timeout 100',
+            'process 2', 'timeout 200',
+            'process 3', 'timeout 500',
+            'process 4', 'timeout 500',
+            'process 5', 'timeout 500',
+            'process 6', 'timeout 600'
+        ]);
+        test.done();
+    }, 800);
 }
 
 exports['cargo'] = function (test) {
