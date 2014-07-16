@@ -746,6 +746,27 @@ exports['waterfall multiple callback calls'] = function(test){
     async.waterfall(arr);
 };
 
+exports['waterfall call in another context'] = function(test) {
+    var vm = require('vm');
+    var sandbox = {
+        async: async,
+        test: test
+    };
+
+    var fn = "(" + (function () {
+        async.waterfall([function (callback) {
+            callback();
+        }], function (err) {
+            if (err) {
+                return test.done(err);
+            }
+            test.done();
+        });
+    }).toString() + "())";
+
+    vm.runInNewContext(fn, sandbox);
+};
+
 exports['parallel'] = function(test){
     var call_order = [];
     async.parallel([
@@ -896,6 +917,27 @@ exports['parallel limit object'] = function(test){
     });
 };
 
+exports['parallel call in another context'] = function(test) {
+    var vm = require('vm');
+    var sandbox = {
+        async: async,
+        test: test
+    };
+
+    var fn = "(" + (function () {
+        async.parallel([function (callback) {
+            callback();
+        }], function (err) {
+            if (err) {
+                return test.done(err);
+            }
+            test.done();
+        });
+    }).toString() + "())";
+
+    vm.runInNewContext(fn, sandbox);
+};
+
 exports['series'] = function(test){
     var call_order = [];
     async.series([
@@ -970,6 +1012,27 @@ exports['series object'] = function(test){
         test.same(call_order, [1,2,3]);
         test.done();
     });
+};
+
+exports['series call in another context'] = function(test) {
+    var vm = require('vm');
+    var sandbox = {
+        async: async,
+        test: test
+    };
+
+    var fn = "(" + (function () {
+        async.series([function (callback) {
+            callback();
+        }], function (err) {
+            if (err) {
+                return test.done(err);
+            }
+            test.done();
+        });
+    }).toString() + "())";
+
+    vm.runInNewContext(fn, sandbox);
 };
 
 exports['iterator'] = function(test){
@@ -2329,6 +2392,51 @@ exports['queue pause'] = function(test) {
             'process 4', 'timeout 500',
             'process 5', 'timeout 500',
             'process 6', 'timeout 600'
+        ]);
+        test.done();
+    }, 800);
+}
+
+exports['queue pause with concurrency'] = function(test) {
+    var call_order = [],
+        task_timeout = 100,
+        pause_timeout = 50,
+        resume_timeout = 300,
+        tasks = [ 1, 2, 3, 4, 5, 6 ],
+
+        elapsed = (function () {
+            var start = +Date.now();
+            return function () { return Math.floor((+Date.now() - start) / 100) * 100; };
+        })();
+
+    var q = async.queue(function (task, callback) {
+        setTimeout(function () {
+            call_order.push('process ' + task);
+            call_order.push('timeout ' + elapsed());
+            callback();
+        }, task_timeout);
+    }, 2);
+
+    q.push(tasks);
+
+    setTimeout(function () {
+        q.pause();
+        test.equal(q.paused, true);
+    }, pause_timeout);
+
+    setTimeout(function () {
+        q.resume();
+        test.equal(q.paused, false);
+    }, resume_timeout);
+
+    setTimeout(function () {
+        test.same(call_order, [
+            'process 1', 'timeout 100',
+            'process 2', 'timeout 100',
+            'process 3', 'timeout 400',
+            'process 4', 'timeout 400',
+            'process 5', 'timeout 500',
+            'process 6', 'timeout 500'
         ]);
         test.done();
     }, 800);
