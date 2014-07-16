@@ -16,7 +16,7 @@ which will have `object` as context.
 ```javascript
 var nasync = require( 'node-async' );
 var obj = {
-    data: [],
+	data: [],
 	numb: 0
 };
 nasync.get(obj).waterfall([
@@ -73,11 +73,14 @@ For documentation see [async documentation](https://github.com/caolan/async/#doc
 * [forever](https://github.com/caolan/async/#forever)
 * [waterfall](https://github.com/caolan/async/#waterfall)
 * [compose](https://github.com/caolan/async/#compose)
+* [seq](https://github.com/caolan/async/#seq)
 * [applyEach](https://github.com/caolan/async/#applyEach)
 * [applyEachSeries](https://github.com/caolan/async/#applyEachSeries)
 * [queue](https://github.com/caolan/async/#queue)
+* [priorityQueue](https://github.com/caolan/async/#priorityQueue)
 * [cargo](https://github.com/caolan/async/#cargo)
 * [auto](https://github.com/caolan/async/#auto)
+* [retry](https://github.com/caolan/async/#retry)
 * [iterator](https://github.com/caolan/async/#iterator)
 * [apply](https://github.com/caolan/async/#apply)
 * [nextTick](https://github.com/caolan/async/#nextTick)
